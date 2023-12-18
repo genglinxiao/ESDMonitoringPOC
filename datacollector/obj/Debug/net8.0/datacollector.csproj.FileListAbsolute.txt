@@ -1,0 +1,15 @@
+/data/coderepo/ESDMonitoringPOC/datacollector/obj/Debug/net8.0/datacollector.GeneratedMSBuildEditorConfig.editorconfig
+/data/coderepo/ESDMonitoringPOC/datacollector/obj/Debug/net8.0/datacollector.AssemblyInfoInputs.cache
+/data/coderepo/ESDMonitoringPOC/datacollector/obj/Debug/net8.0/datacollector.AssemblyInfo.cs
+/data/coderepo/ESDMonitoringPOC/datacollector/obj/Debug/net8.0/datacollector.csproj.CoreCompileInputs.cache
+/data/coderepo/ESDMonitoringPOC/datacollector/obj/Debug/net8.0/datacollector.sourcelink.json
+/data/coderepo/ESDMonitoringPOC/datacollector/bin/Debug/net8.0/datacollector
+/data/coderepo/ESDMonitoringPOC/datacollector/bin/Debug/net8.0/datacollector.deps.json
+/data/coderepo/ESDMonitoringPOC/datacollector/bin/Debug/net8.0/datacollector.runtimeconfig.json
+/data/coderepo/ESDMonitoringPOC/datacollector/bin/Debug/net8.0/datacollector.dll
+/data/coderepo/ESDMonitoringPOC/datacollector/bin/Debug/net8.0/datacollector.pdb
+/data/coderepo/ESDMonitoringPOC/datacollector/obj/Debug/net8.0/datacollector.dll
+/data/coderepo/ESDMonitoringPOC/datacollector/obj/Debug/net8.0/refint/datacollector.dll
+/data/coderepo/ESDMonitoringPOC/datacollector/obj/Debug/net8.0/datacollector.pdb
+/data/coderepo/ESDMonitoringPOC/datacollector/obj/Debug/net8.0/datacollector.genruntimeconfig.cache
+/data/coderepo/ESDMonitoringPOC/datacollector/obj/Debug/net8.0/ref/datacollector.dll
