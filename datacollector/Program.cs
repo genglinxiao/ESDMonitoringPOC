@@ -17,7 +17,7 @@ class Program
                 Environment.Exit(1); // Exit with a non-zero status to indicate an error
             }
 
-            // Proceed with the rest of your program
+            // Proceed with the rest of the program
         }
         catch (Exception ex)
         {
@@ -29,9 +29,8 @@ class Program
     static bool IsValidConfiguration(Dictionary<string, Dictionary<string, string>> config)
     {
         // Implement validation logic here
-        // For example, check if certain keys exist in the "Read" and "Write" sections
         return config.ContainsKey("Input") && config.ContainsKey("Process") && config.ContainsKey("Process");
-        // Add more detailed validation as needed
+        // Potentially more checks...
     }
 }
 
