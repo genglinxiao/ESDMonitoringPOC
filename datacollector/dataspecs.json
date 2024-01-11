@@ -1,0 +1,75 @@
+[
+    {
+        "StartAddress": 30101,
+        "Description": "General Status",
+        "Units": "bit defines",
+        "Length": 16,
+        "Name": "general_status",
+        "DataType": "flags"
+    },
+    {
+        "StartAddress": 30102,
+        "Description": "'Last set power value'",
+        "Units": "kW (signed 16 bits)",
+        "Length": 16,
+        "Name": "last_set_power_value",
+        "DataType": "float"
+    },
+    {
+        "Preferred Address": 30103,
+        "Description": "Status Converter 1",
+        "Units": "bit defines",
+        "Length": 16,
+        "Name": "status_converter_1",
+        "DataType": "flags"
+    },
+    {
+        "Preferred Address": 30104,
+        "Description": "Status Converter 2",
+        "Units": "bit defines",
+        "Length": 16,
+        "Name": "status_converter_2",
+        "DataType": "flags"
+    },
+    {
+        "Preferred Address": 30105,
+        "Description": "Status BMS 1",
+        "Units": "bit defines",
+        "Length": 16,
+        "Name": "status_BMS_1",
+        "DataType": "flags"
+    },
+    {
+        "Preferred Address": 30106,
+        "Description": "Status BMS 2",
+        "Units": "bit defines",
+        "Length": 16,
+        "Name": "status_BMS_2",
+        "DataType": "flags"
+    },
+    {
+        "Preferred Address": 31006,
+        "Description": "Estimated Load L1.",
+        "Units": "A",
+        "Length": 16,
+        "Name": "esti_load_l1",
+        "DataType": "float"
+    },
+    {
+        "Preferred Address": 31007,
+        "Description": "Estimated Load L2.",
+        "Units": "A",
+        "Length": 16,
+        "Name": "esti_load_l2",
+        "DataType": "float"
+    },
+    {
+        "Preferred Address": 31008,
+        "Description": "Estimated Load L3.",
+        "Units": "A",
+        "Length": 16,
+        "Name": "esti_load_l3",
+        "DataType": "float"
+    }
+]
+
