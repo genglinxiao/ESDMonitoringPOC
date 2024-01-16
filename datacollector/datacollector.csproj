@@ -1,7 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\NModbus4\NModbus4\NModbus4.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NModbus4.NetCore" Version="3.0.0" />
+    <PackageReference Include="prometheus-net" Version="8.2.0" />
   </ItemGroup>
 
   <PropertyGroup>

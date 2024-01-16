@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+namespace DataCollector.Conf
+{
 public class ConfFileParser
 {
     public Dictionary<string, Dictionary<string, string>> Parse(string filePath)
@@ -39,4 +41,4 @@ public class ConfFileParser
         return config;
     }
 }
-
+}
