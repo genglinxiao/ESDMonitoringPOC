@@ -54,6 +54,7 @@ class Program
         const string configFilePath = "collector.conf";
         var parser = new ConfFileParser();
         Dictionary<string, Dictionary<string, string>> config = null;
+	int port = 0;
 
         try
         {
@@ -64,14 +65,7 @@ class Program
                 Console.WriteLine("Invalid configuration. Please check the config file.");
                 Environment.Exit(1); // Exit with a non-zero status to indicate an error
             }
-
-	    ////////// to be removed ////////
-	    //string slaveIpsStr=config["General"]["slaveIps"];
-	    //slaves=slaveIpsStr.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-		//    .Select(item => item.Trim())
-		  //  .ToArray();
-	    ///di = new DeviceInfo(config["General"]["id"],slaves[0]);
-	    ////////// to be removed ////////
+	    port = int.Parse(config["General"]["port"]);
 
         }
         catch (Exception ex)
@@ -80,8 +74,8 @@ class Program
             Environment.Exit(1); // Exit with a non-zero status to indicate an error
         }
 
-	//Start prometheus
-	using var server = new MetricServer(port: 1235);
+	
+	using var server = new MetricServer(port: port);
 	Metrics.SuppressDefaultMetrics();
 	try
 	{
@@ -110,6 +104,8 @@ class Program
 
             var reader = new JsonSpecificationReader();
 	    List<FieldSpecification> specifications = reader.ReadSpecifications(slave["spec_file"]);
+	    var measurements = new List<(ushort, ushort, Gauge, FieldSpecification)>();
+	    //Dictionary<ushort, Gauge> measurements =new Dictionary<ushort, Gauge>();
 
 	    int interval=60;
 	    if(int.TryParse(slave["interval"], out int result))
@@ -117,7 +113,12 @@ class Program
 		    interval = result;
 	    }
 
-	    timer = new Timer(GetDeviceDataAndPublish, di, TimeSpan.Zero, TimeSpan.FromSeconds(interval));
+		foreach (var field in specifications)
+		{
+                   measurements.Add((field.StartAddress,field.Length, Metrics.CreateGauge(field.Name, field.Description), field));
+		}
+
+	    timer = new Timer(GetDeviceDataAndPublish,(slave["slaveAddr"], measurements), TimeSpan.Zero, TimeSpan.FromSeconds(interval));
 
 	}
 	
@@ -129,19 +130,43 @@ class Program
 
     private static void GetDeviceDataAndPublish(object state)
     {
+	    var (conStr, measurements) = ((string, List<(ushort, ushort, Gauge, FieldSpecification)>))state;
+	    foreach (var (addr, len, gauge, field) in measurements)
+	    {
+
+		    List<ushort> result = ReadMeasures(conStr, addr, len);
+		    switch(field.DataType)
+		    {
+			    case "float":
+				    break;
+			    case "i32":
+				    break;
+			    case "i16":
+				    break;
+			    case "u32":
+				    break;
+			    case "u16":
+				    break;
+			    case "flags":
+				    break;
+		    }
+
+		    //gauge.Set(
+	    }
+	    /*
 	    if (state is DeviceInfo di)
 	    {
  	    	Console.WriteLine("Querying data at: " + DateTime.Now);
 		di.cAttempts.Inc();
 	
-		List<ushort> dataFrame = ReadHoldingRegisters(di.ConnectStr, di.BaseAddr, di.DataFrameLength);
+		List<ushort> dataFrame = ReadInputRegisters(di.ConnectStr, di.BaseAddr, len);
 
 		di.cSuccess.Inc();
         	Console.WriteLine(DateTime.Now + "Data extracted successfully.");
 	    }else
 	    {
 		    throw new ArgumentException("Expecting a DeviceInfo class here.");
-	    }
+	    }*/
     }
 
     private static void CancelKeyPressHandler(object sender, ConsoleCancelEventArgs e)
@@ -161,7 +186,7 @@ class Program
         // Potentially more checks...
     }
 
-    public static List<ushort> ReadHoldingRegisters(string connectionString, ushort baseAddress, ushort length)
+    public static List<ushort> ReadMeasures(string connectionString, byte unitId, ushort baseAddress, ushort length)
     {
 
 	if (string.IsNullOrWhiteSpace(connectionString))
@@ -198,20 +223,8 @@ class Program
         {
             ModbusIpMaster master = ModbusIpMaster.CreateIp(client);
 
-	    for (int i=0;i<length/125 +1;i++)
-	    {
-            	ushort startAddress =(ushort)( baseAddress + i*125);
-            	ushort numInputs = 125;
-            	ushort[] inputs = master.ReadHoldingRegisters(startAddress, numInputs);
-		//bool[] inputs = master.ReadInputs(startAddress, numInputs);
+            	ushort[] inputs = master.ReadInputRegisters(baseAddress, length);
 
-		resultList.AddRange(inputs);
-            	for (int j = 0; j < numInputs; j++)
-            	{
-                	//Console.WriteLine($"Input {(startAddress + j)}={(inputs[j])}");
-                	Console.Write(".");
-            	}
-	    }
         }
 	return resultList;
     }

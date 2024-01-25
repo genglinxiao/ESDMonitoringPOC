@@ -3,8 +3,8 @@ namespace DataCollector.Helper{
 	public class FieldSpecification
 	{
 		public string Name { get; set; }
-		public int StartAddress { get; set; }
-		public int Length { get; set; }
+		public ushort StartAddress { get; set; }
+		public ushort Length { get; set; }
 		public string DataType { get; set; }
 		public string Unit { get; set; }
 		public string Description { get; set; }

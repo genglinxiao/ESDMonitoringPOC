@@ -62,4 +62,11 @@ Troubleshooting
 Appendix
 
     Any additional reference material.
+       NModbus4 seems to disregard slave ID in tcp mode and set all slave id equals 0, which is incorrect. The offending line is:
+          NModbus4/Modbus.cs:        public const byte DefaultIpSlaveUnitId = 0;
+
+        I changed it to:
+           public const byte DefaultIpSlaveUnitId = 1;
+        in order for it to work with the testing device. I'll come up with an additional function that allows a customized slave ID later.
+
     Glossary of terms.
