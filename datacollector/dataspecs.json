@@ -3,7 +3,7 @@
         "StartAddress": 30101,
         "Description": "General Status",
         "Units": "bit defines",
-        "Length": 16,
+        "Length": 1,
         "Name": "general_status",
         "DataType": "flags"
     },
@@ -11,64 +11,152 @@
         "StartAddress": 30102,
         "Description": "'Last set power value'",
         "Units": "kW (signed 16 bits)",
-        "Length": 16,
+        "Length": 1,
         "Name": "last_set_power_value",
-        "DataType": "float"
+        "DataType": "i16"
     },
     {
-        "Preferred Address": 30103,
+        "StartAddress": 30103,
         "Description": "Status Converter 1",
         "Units": "bit defines",
-        "Length": 16,
+        "Length": 1,
         "Name": "status_converter_1",
         "DataType": "flags"
     },
     {
-        "Preferred Address": 30104,
+        "StartAddress": 30104,
         "Description": "Status Converter 2",
         "Units": "bit defines",
-        "Length": 16,
+        "Length": 1,
         "Name": "status_converter_2",
         "DataType": "flags"
     },
     {
-        "Preferred Address": 30105,
+        "StartAddress": 30105,
         "Description": "Status BMS 1",
         "Units": "bit defines",
-        "Length": 16,
+        "Length": 1,
         "Name": "status_BMS_1",
         "DataType": "flags"
     },
     {
-        "Preferred Address": 30106,
+        "StartAddress": 30106,
         "Description": "Status BMS 2",
         "Units": "bit defines",
-        "Length": 16,
+        "Length": 1,
         "Name": "status_BMS_2",
         "DataType": "flags"
     },
     {
-        "Preferred Address": 31006,
+        "StartAddress": 31006,
         "Description": "Estimated Load L1.",
         "Units": "A",
-        "Length": 16,
+        "Length": 1,
         "Name": "esti_load_l1",
-        "DataType": "float"
+        "DataType": "u16"
     },
     {
-        "Preferred Address": 31007,
+        "StartAddress": 31007,
         "Description": "Estimated Load L2.",
         "Units": "A",
-        "Length": 16,
+        "Length": 1,
         "Name": "esti_load_l2",
+        "DataType": "u16"
+    },
+    {
+        "StartAddress": 30207,
+        "Description": "Estimated Load L2.",
+        "Units": "A",
+        "Length": 4,
+        "Name": "esti_load_l2",
+        "DataType": "chars"
+    },
+    {
+        "StartAddress": 31008,
+        "Description": "Estimated Load L3.",
+        "Units": "A",
+        "Length": 1,
+        "Name": "esti_load_l3",
+        "DataType": "u16"
+    },
+    {
+        "StartAddress": 30245,
+        "Description": "Energy meter 1 Power.",
+        "Units": "kW",
+        "Length": 2,
+        "Name": "Meter_1_Power",
         "DataType": "float"
     },
     {
-        "Preferred Address": 31008,
-        "Description": "Estimated Load L3.",
+        "StartAddress": 30247,
+        "Description": "Energy meter 1 Power IN.",
+        "Units": "kW",
+        "Length": 2,
+        "Name": "Meter_1_Power_IN",
+        "DataType": "float"
+    },
+    {
+        "StartAddress": 30249,
+        "Description": "Energy meter 1 Power OUT.",
+        "Units": "kW",
+        "Length": 2,
+        "Name": "Meter_1_Power_OUT",
+        "DataType": "float"
+    },
+    {
+        "StartAddress": 30251,
+        "Description": "Energy meter 1 Volt phase 1.",
+        "Units": "V",
+        "Length": 2,
+        "Name": "Meter_1_Volt_p1",
+        "DataType": "float"
+    },
+    {
+        "StartAddress": 30253,
+        "Description": "Energy meter 1 Volt phase 2.",
+        "Units": "V",
+        "Length": 2,
+        "Name": "Meter_1_Volt_p2",
+        "DataType": "float"
+    },
+    {
+        "StartAddress": 30255,
+        "Description": "Energy meter 1 Volt phase 3.",
+        "Units": "V",
+        "Length": 2,
+        "Name": "Meter_1_Volt_p3",
+        "DataType": "float"
+    },
+    {
+        "StartAddress": 30257,
+        "Description": "Energy meter 1 Current phase 1.",
         "Units": "A",
-        "Length": 16,
-        "Name": "esti_load_l3",
+        "Length": 2,
+        "Name": "Meter_1_Current_p1",
+        "DataType": "float"
+    },
+    {
+        "StartAddress": 30259,
+        "Description": "Energy meter 1 Current phase 2.",
+        "Units": "A",
+        "Length": 2,
+        "Name": "Meter_1_Current_p2",
+        "DataType": "float"
+    },
+    {
+        "StartAddress": 30261,
+        "Description": "Energy meter 1 Current phase 3.",
+        "Units": "A",
+        "Length": 2,
+        "Name": "Meter_1_Current_p3",
+        "DataType": "float"
+    },
+    {
+        "StartAddress": 30263,
+        "Description": "Energy meter 1 frequency.",
+        "Units": "Hz",
+        "Length": 2,
+        "Name": "Meter_1_freq",
         "DataType": "float"
     }
 ]

@@ -118,7 +118,7 @@ class Program
                    measurements.Add((field.StartAddress,field.Length, Metrics.CreateGauge(field.Name, field.Description), field));
 		}
 
-	    timer = new Timer(GetDeviceDataAndPublish,(slave["slaveAddr"], measurements), TimeSpan.Zero, TimeSpan.FromSeconds(interval));
+	    timer = new Timer(GetDeviceDataAndPublish,(slave["slaveAddr"],ChecksAttempted, ChecksSucceeded,  measurements), TimeSpan.Zero, TimeSpan.FromSeconds(interval));
 
 	}
 	
@@ -130,28 +130,43 @@ class Program
 
     private static void GetDeviceDataAndPublish(object state)
     {
-	    var (conStr, measurements) = ((string, List<(ushort, ushort, Gauge, FieldSpecification)>))state;
+	    var (conStr, ChecksAttempted, ChecksSucceeded, measurements) = ((string,Counter, Counter, List<(ushort, ushort, Gauge, FieldSpecification)>))state;
+	    ChecksAttempted.Inc();
+	    try {
 	    foreach (var (addr, len, gauge, field) in measurements)
 	    {
 
-		    List<ushort> result = ReadMeasures(conStr, addr, len);
+		    Console.WriteLine(field.Description);
+		    List<ushort> result = ReadMeasures(conStr, 1, addr, len);
 		    switch(field.DataType)
 		    {
 			    case "float":
+				    gauge.Set(ConvertToFloat(result));
+				    Console.WriteLine(ConvertToFloat(result));
 				    break;
 			    case "i32":
+				    gauge.Set(ConvertToInt(result,0));
 				    break;
 			    case "i16":
 				    break;
 			    case "u32":
 				    break;
 			    case "u16":
+				    gauge.Set(result[0]);
+				    break;
+			    case "chars":
+				    Console.WriteLine(ConvertToCharArray(result));
 				    break;
 			    case "flags":
 				    break;
 		    }
 
 		    //gauge.Set(
+	    }
+	    ChecksSucceeded.Inc();
+	    }
+	    catch (Exception ex){
+		    Console.WriteLine("Exception Occurred.");
 	    }
 	    /*
 	    if (state is DeviceInfo di)
@@ -179,7 +194,7 @@ class Program
     }
 
 
-    static bool IsValidConfiguration(Dictionary<string, Dictionary<string, string>> config)
+    private static bool IsValidConfiguration(Dictionary<string, Dictionary<string, string>> config)
     {
         // Implement validation logic here
         return config.ContainsKey("General");
@@ -225,6 +240,7 @@ class Program
 
             	ushort[] inputs = master.ReadInputRegisters(baseAddress, length);
 
+		resultList.AddRange(inputs);
         }
 	return resultList;
     }
@@ -239,8 +255,68 @@ class Program
         Console.WriteLine("DataCollector Usage:");
         Console.WriteLine("  --version   Show the version information.");
         Console.WriteLine("  --help      Show this help message.");
-        Console.WriteLine("  --modpoll   Use modpoll as external ModBus handler");
         // Add other options and their descriptions
     }
+    private static short ConvertToShort(ushort value)
+    {
+    	// If the MSB is set, treat it as a negative number
+    	if ((value & 0x8000) != 0) // Check if MSB is set
+    	{
+        	return unchecked((short)value); // Convert using unchecked to preserve the sign
+    	}
+    	else
+    	{
+        	return (short)value;
+    	}
+    }
+    private static int ConvertToInt(List<ushort> data, int startIndex)
+    {
+	    uint upper = (uint)data[startIndex];
+	    uint lower = (uint)data[startIndex + 1];
+	    
+	    uint combined = (upper << 16) | lower;
+
+	    // If the MSB is set, treat it as a negative number
+	    if ((upper & 0x8000) != 0) // Check if MSB of upper ushort is set
+	    {
+	        return unchecked((int)combined); // Convert using unchecked to preserve the sign
+	    }
+	    else
+	    {
+	        return (int)combined;
+	    }
+    }
+
+    private static float ConvertToFloat(List<ushort> data)
+    {
+	    if (data.Count != 2)
+	    {
+		    foreach (ushort dp in data)
+		    {
+			    Console.WriteLine("You have {0} data points",data.Count);
+			    Console.Write("0x{0:X4} ", dp);
+		    }
+		    Console.WriteLine();
+	        throw new ArgumentException("List must contain exactly 2 elements for float conversion.");
+	    }
+	    // Combine the two ushort values into a single uint
+	    uint combined = ((uint)data[0] << 16) | data[1];
+
+	    // Reinterpret the uint as a float
+	    return BitConverter.ToSingle(BitConverter.GetBytes(combined), 0);
+    }
+    static char[] ConvertToCharArray(List<ushort> data)
+    {
+	    char[] chars = new char[data.Count * 2];
+	    for (int i = 0; i < data.Count; i++)
+	    {
+		    //chars[i * 2] = (char)(data[i] & 0xFF);          // Lower byte
+		    //chars[i * 2 + 1] = (char)((data[i] >> 8) & 0xFF); // Upper byte
+		    chars[i * 2 + 1] = (char)(data[i] & 0xFF);          // Lower byte
+		    chars[i * 2] = (char)((data[i] >> 8) & 0xFF); // Upper byte
+	    }
+	    return chars;
+    }
+
 }
 
