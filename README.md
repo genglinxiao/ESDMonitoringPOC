@@ -20,4 +20,7 @@ The following steps has to be performed on each of the C# projects, first the NM
     For Moq, you need "dotnet add package Moq --version 4.20.70".
 5. Then you can change the .sln file to refer to the new .csproj files.
 
-That's basically it. No code change is needed. 
+That's basically it. ~~ No code change is needed. ~~ Now the project can be built under dotnet 8.
+
+In order for it to work with the current project, I've made the following changes to the code:
+
