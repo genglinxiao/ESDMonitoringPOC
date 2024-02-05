@@ -10,6 +10,7 @@ using Prometheus;
 
 using DataCollector.Conf;
 using DataCollector.Helper;
+using Newtonsoft.Json;
 
 class Program
 {
@@ -29,6 +30,7 @@ class Program
         });
 
         ILogger logger = loggerFactory.CreateLogger<Program>();
+        string configFilePath = "collector.conf";
 
 	//Command line processing
 	if (args.Length > 0)
@@ -44,6 +46,18 @@ class Program
                 // Add other cases for different options
 		case "--modpoll":
 		    throw new NotImplementedException();
+		    return;
+		case "--conf":
+		    if (args.Length==2)
+		    {
+			    configFilePath = args[1];
+		    }
+		    else
+		    {
+			    Console.WriteLine("No configuration or wrong command line format.");
+			    return;
+		    }
+		    break;
                 default:
                     Console.WriteLine("Unknown option. Use '--help' for usage information.");
                     return;
@@ -51,7 +65,6 @@ class Program
 	}
 
 	//Conf file processing
-        const string configFilePath = "collector.conf";
         var parser = new ConfFileParser();
         Dictionary<string, Dictionary<string, string>> config = null;
 	int port = 0;
@@ -100,14 +113,12 @@ class Program
 	    Counter ChecksAttempted = Metrics.CreateCounter("checks_attempted_for_"+slaveKey, "Numbers of checks attempted on the device: "+slaveKey);
 	    Counter ChecksSucceeded = Metrics.CreateCounter("checks_succeeded_on_"+slaveKey, "Numbers of checks succeeded on the device: "+slaveKey);
 
-	    DeviceInfo di = new DeviceInfo(slave["id"], slave["slaveAddr"], ChecksAttempted, ChecksSucceeded);
-
             var reader = new JsonSpecificationReader();
 	    List<FieldSpecification> specifications = reader.ReadSpecifications(slave["spec_file"]);
 	    var measurements = new List<(ushort, ushort, Gauge, FieldSpecification)>();
-	    //Dictionary<ushort, Gauge> measurements =new Dictionary<ushort, Gauge>();
+	    var flags = new List<(ushort, ushort, List<Counter>, FieldSpecification)>();
 
-	    int interval=60;
+	    int interval=60; //default to 60 seconds if not specificed.
 	    if(int.TryParse(slave["interval"], out int result))
 	    {
 		    interval = result;
@@ -115,10 +126,32 @@ class Program
 
 		foreach (var field in specifications)
 		{
-                   measurements.Add((field.StartAddress,field.Length, Metrics.CreateGauge(field.Name, field.Description), field));
+			if (field.DataType!="flags")
+			{
+				var gauge=Metrics.CreateGauge(field.Name, field.Description,
+                                                                new GaugeConfiguration
+                                                                {
+                                                                  LabelNames = new[] { "id", "model", "location" }
+                                                                  //LabelNames = new[] { slave["id"], slave["model"], slave["location"] }
+                                                                });
+				measurements.Add((field.StartAddress,field.Length, gauge, field));
+				
+			}
+			else
+			{
+				//Create one flag for each bit.
+				//And count the time internals before back to normal.
+				var promFlags = new List<Counter>();
+				for (int i=0;i<field.Length*16;i++)
+				{
+					Counter c=Metrics.CreateCounter(field.Name, field.Name+i.ToString());
+					promFlags.Add(c);
+				}
+				flags.Add((field.StartAddress, field.Length, promFlags, field));
+			}
 		}
 
-	    timer = new Timer(GetDeviceDataAndPublish,(slave["slaveAddr"],ChecksAttempted, ChecksSucceeded,  measurements), TimeSpan.Zero, TimeSpan.FromSeconds(interval));
+	    timer = new Timer(GetDeviceDataAndPublish,(slave["slaveAddr"], slave["unitId"], slave["id"], slave["model"], slave["location"], ChecksAttempted, ChecksSucceeded,  measurements), TimeSpan.Zero, TimeSpan.FromSeconds(interval));
 
 	}
 	
@@ -130,58 +163,52 @@ class Program
 
     private static void GetDeviceDataAndPublish(object state)
     {
-	    var (conStr, ChecksAttempted, ChecksSucceeded, measurements) = ((string,Counter, Counter, List<(ushort, ushort, Gauge, FieldSpecification)>))state;
+	    var (conStr, unitIdString, deviceId, deviceModel, deviceLocation,  ChecksAttempted, ChecksSucceeded, measurements) = ((string, string, string, string, string, Counter, Counter, List<(ushort, ushort, Gauge, FieldSpecification)>))state;
+	    byte unitId=1;
+	    Byte.TryParse(unitIdString,out unitId);
+
 	    ChecksAttempted.Inc();
 	    try {
 	    foreach (var (addr, len, gauge, field) in measurements)
 	    {
 
 		    Console.WriteLine(field.Description);
-		    List<ushort> result = ReadMeasures(conStr, 1, addr, len);
+		    List<ushort> result = ReadMeasures(conStr, unitId, addr, len);
 		    switch(field.DataType)
 		    {
 			    case "float":
-				    gauge.Set(ConvertToFloat(result));
+				    gauge.WithLabels(deviceId, deviceModel, deviceLocation).Set(ConvertToFloat(result));
 				    Console.WriteLine(ConvertToFloat(result));
 				    break;
 			    case "i32":
-				    gauge.Set(ConvertToInt(result,0));
+				    gauge.WithLabels(deviceId, deviceModel, deviceLocation).Set(ConvertToInt(result,0));
 				    break;
 			    case "i16":
+				    short temp=unchecked((short)result[0]);
+				    gauge.WithLabels(deviceId, deviceModel, deviceLocation).Set(temp);
+				    Console.WriteLine(temp);
 				    break;
 			    case "u32":
+				    uint inum = ((uint)result[1]<<16)|result[0];
+				    gauge.WithLabels(deviceId, deviceModel, deviceLocation).Set(inum);
 				    break;
 			    case "u16":
-				    gauge.Set(result[0]);
+				    gauge.WithLabels(deviceId, deviceModel, deviceLocation).Set(result[0]);
 				    break;
 			    case "chars":
 				    Console.WriteLine(ConvertToCharArray(result));
 				    break;
 			    case "flags":
+				    //Should never come here.
 				    break;
 		    }
 
-		    //gauge.Set(
 	    }
 	    ChecksSucceeded.Inc();
 	    }
 	    catch (Exception ex){
 		    Console.WriteLine("Exception Occurred.");
 	    }
-	    /*
-	    if (state is DeviceInfo di)
-	    {
- 	    	Console.WriteLine("Querying data at: " + DateTime.Now);
-		di.cAttempts.Inc();
-	
-		List<ushort> dataFrame = ReadInputRegisters(di.ConnectStr, di.BaseAddr, len);
-
-		di.cSuccess.Inc();
-        	Console.WriteLine(DateTime.Now + "Data extracted successfully.");
-	    }else
-	    {
-		    throw new ArgumentException("Expecting a DeviceInfo class here.");
-	    }*/
     }
 
     private static void CancelKeyPressHandler(object sender, ConsoleCancelEventArgs e)
@@ -238,9 +265,17 @@ class Program
         {
             ModbusIpMaster master = ModbusIpMaster.CreateIp(client);
 
-            	ushort[] inputs = master.ReadInputRegisters(baseAddress, length);
+            	ushort[] results;
+		if (baseAddress>=40000)
+		{
+			results = master.ReadHoldingRegisters(unitId, baseAddress, length);
+		}
+		else
+		{
+			results = master.ReadInputRegisters(unitId, baseAddress, length);
+		}	
 
-		resultList.AddRange(inputs);
+		resultList.AddRange(results);
         }
 	return resultList;
     }
@@ -255,6 +290,7 @@ class Program
         Console.WriteLine("DataCollector Usage:");
         Console.WriteLine("  --version   Show the version information.");
         Console.WriteLine("  --help      Show this help message.");
+        Console.WriteLine("  --conf      <path to your configuration file.");
         // Add other options and their descriptions
     }
     private static short ConvertToShort(ushort value)
@@ -317,6 +353,15 @@ class Program
 	    }
 	    return chars;
     }
+
+
+
+	public static void DumpObjectToConsole(object obj)
+	{
+	    string jsonString = JsonConvert.SerializeObject(obj, Formatting.Indented); // Pretty print the JSON
+	    Console.WriteLine(jsonString);
+	}
+
 
 }
 

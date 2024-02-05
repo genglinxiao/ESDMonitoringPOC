@@ -44,7 +44,31 @@
         "Description": "Status BMS 2",
         "Units": "bit defines",
         "Length": 1,
-        "Name": "status_BMS_2",
+        "Name": "Status_BMS_2",
+        "DataType": "flags"
+    },
+    {
+        "StartAddress": 30115,
+        "Description": "Battery State of Charge",
+        "Units": "% fully charged",
+        "Length": 1,
+        "Name": "status_Battery_Charge",
+        "DataType": "u16"
+    },
+    {
+        "StartAddress": 30123,
+        "Description": "Actual container temperature",
+        "Units": "Celsius",
+        "Length": 1,
+        "Name": "Temp_Actual_Container",
+        "DataType": "i16"
+    },
+    {
+        "StartAddress": 30124,
+        "Description": "Actual Reefer temperature",
+        "Units": "",
+        "Length": 1,
+        "Name": "Status_Reefer_Control",
         "DataType": "flags"
     },
     {
@@ -65,10 +89,10 @@
     },
     {
         "StartAddress": 30207,
-        "Description": "Estimated Load L2.",
+        "Description": "Software Version",
         "Units": "A",
         "Length": 4,
-        "Name": "esti_load_l2",
+        "Name": "sw_version",
         "DataType": "chars"
     },
     {
