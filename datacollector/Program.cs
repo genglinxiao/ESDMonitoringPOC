@@ -15,7 +15,7 @@ using Newtonsoft.Json;
 class Program
 {
     private const int DefaultPort = 502;
-    private static Timer? timer;
+    private static List<Timer> timers = new List<Timer>();
     private static ManualResetEvent quitEvent = new ManualResetEvent(false);
 
     static void Main(string[] args)
@@ -132,7 +132,6 @@ class Program
                                                                 new GaugeConfiguration
                                                                 {
                                                                   LabelNames = new[] { "id", "model", "location" }
-                                                                  //LabelNames = new[] { slave["id"], slave["model"], slave["location"] }
                                                                 });
 				measurements.Add((field.StartAddress,field.Length, gauge, field));
 				
@@ -151,8 +150,8 @@ class Program
 			}
 		}
 
-	    timer = new Timer(GetDeviceDataAndPublish,(slave["slaveAddr"], slave["unitId"], slave["id"], slave["model"], slave["location"], ChecksAttempted, ChecksSucceeded,  measurements), TimeSpan.Zero, TimeSpan.FromSeconds(interval));
-
+	    var timer = new Timer(GetDeviceDataAndPublish,(slave["slaveAddr"], slave["unitId"], slave["id"], slave["model"], slave["location"], ChecksAttempted, ChecksSucceeded,  measurements), TimeSpan.Zero, TimeSpan.FromSeconds(interval));
+	    timers.Add(timer);
 	}
 	
 	//Wait for ctrl+c
@@ -172,7 +171,8 @@ class Program
 	    foreach (var (addr, len, gauge, field) in measurements)
 	    {
 
-		    Console.WriteLine(field.Description);
+		    Console.Write(field.Description);
+		    Console.Write(" : ");
 		    List<ushort> result = ReadMeasures(conStr, unitId, addr, len);
 		    switch(field.DataType)
 		    {
@@ -182,6 +182,7 @@ class Program
 				    break;
 			    case "i32":
 				    gauge.WithLabels(deviceId, deviceModel, deviceLocation).Set(ConvertToInt(result,0));
+				    Console.WriteLine(ConvertToInt(result,0));
 				    break;
 			    case "i16":
 				    short temp=unchecked((short)result[0]);
@@ -191,9 +192,11 @@ class Program
 			    case "u32":
 				    uint inum = ((uint)result[1]<<16)|result[0];
 				    gauge.WithLabels(deviceId, deviceModel, deviceLocation).Set(inum);
+				    Console.WriteLine(inum);
 				    break;
 			    case "u16":
 				    gauge.WithLabels(deviceId, deviceModel, deviceLocation).Set(result[0]);
+				    Console.WriteLine(result[0]);
 				    break;
 			    case "chars":
 				    Console.WriteLine(ConvertToCharArray(result));
@@ -214,7 +217,11 @@ class Program
     private static void CancelKeyPressHandler(object sender, ConsoleCancelEventArgs e)
     {
         Console.WriteLine("Ctrl+C pressed, shutting down.");
-        timer?.Dispose(); // Stop the timer and clean up
+	foreach (var timer in timers)
+	{
+		timer.Dispose();
+	}
+	timers.Clear();
 	quitEvent.Set();
 
         e.Cancel = false;
